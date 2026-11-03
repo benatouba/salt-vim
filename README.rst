@@ -1,139 +1,126 @@
-===================================
-Vim files for working on Salt files
-===================================
+salt-vim — community continuation
+================================
 
-Installation
-============
+Portable Salt state editing for Vim and Neovim: YAML with embedded Jinja,
+Salt renderer extensions, requisites, and conservative buffer-local defaults.
 
-Using the Pathogen Plugin Manager
----------------------------------
+This is a community continuation of `SaltStack's original salt-vim
+<https://github.com/vmware-archive/salt-vim>`_, not an official ownership
+transfer or a VMware/Broadcom/Salt Project endorsement. Original history and
+Apache-2.0 notices are preserved. See ``NOTICE`` for reviewed donor attribution.
 
-The recommended method is to use
-`Pathogen <https://github.com/tpope/vim-pathogen>`_.
-Install Pathogen as described
-`here <https://github.com/tpope/vim-pathogen#installation>`_,
-then do:
+Status: first-release foundation, not a published release. This plugin does
+not render templates, execute Salt, install tools, format files, start language
+servers, or discover project commands.
 
-::
+Requirements and installation
+=============================
 
-    cd ~/.vim/bundle && \
-    git clone https://github.com/saltstack/salt-vim.git
+Use Vim with ``syntax/jinja.vim`` available (bundled by Vim 9.1.0735 and newer),
+or Neovim 0.11+. The default provider is your editor's bundled Jinja syntax.
+If your Vim runtime lacks it, install one generic Jinja provider such as
+`HiPhish/jinja.vim <https://gitlab.com/HiPhish/jinja.vim>`_. Django syntax is
+no longer a substitute for Jinja. Put salt-vim before the editor runtime on
+``runtimepath``, as normal plugin managers do.
 
-Using the Vundle Plugin Manager
--------------------------------
+With Vim's native packages::
 
-See
-`Vundle <https://github.com/gmarik/vundle>`_.
+    git clone https://github.com/benatouba/salt-vim.git \
+      ~/.vim/pack/community/start/salt-vim
 
-Manual Method #1:
------------------
+Enable filetype plugins and highlighting in your vimrc::
 
-::
-
-    git clone https://github.com/saltstack/salt-vim.git
-    cd salt-vim && \
-    cp -r ftdetect ftplugin syntax  ~/.vim/
-
-Manual Method #2:
------------------
-
-Alternately, files can be copied into any other directory where Vim looks for
-its runtime files, like ``/etc/vim/``. The command ``:set runtimepath`` will
-show all such paths. Read ``:help runtimepath`` for more info.
-
-For all installation methods:
------------------------------
-
-You will also need to specify the following settings in your ``~/.vimrc``:
-
-.. code-block:: vim
-
-    syntax on
-    set nocompatible
     filetype plugin indent on
+    syntax enable
 
-Note: It's possible you may be presented with an error stating something
-similar to:
+For Neovim with lazy.nvim::
 
-"E319: Sorry, the command is not available in this version: filetype plugin
-indent on"
+    { "benatouba/salt-vim", ft = { "salt", "sls" } }
 
-If you get this, specify the following settings in your ``~/.vimrc`` instead:
+Current Neovim already detects ``*.sls`` as ``salt``. Lazy managers that need
+plugin detection for old runtimes, ``Saltfile`` or ``#!py`` must load this
+plugin at startup instead (``lazy = false`` with lazy.nvim): a filetype trigger
+cannot retroactively run a missed ``BufRead`` event.
 
-.. code-block:: vim
+Filetypes and syntax ownership
+=============================
 
-    syntax on
-    set nocompatible
-    set tabstop=2
-    set shiftwidth=2
-    set expandtab
+* ``salt`` is canonical; ``:setfiletype sls`` remains supported for existing
+  configurations. Update lint, snippet and formatter filetype mappings when
+  moving from the old ``sls`` default to ``salt``.
+* Detects ``*.sls`` and ``Saltfile`` if no unrelated filetype is already set.
+  Python-rendered SLS beginning with ``#!py`` (including a renderer pipeline)
+  uses ``python`` instead. This is textual detection, never rendering.
+* Ordinary ``*.yaml``, HTML and Jinja templates are not claimed by salt-vim.
+* Loads YAML, then the **first** ``syntax/jinja.vim`` on ``runtimepath``.
+  Runtime Jinja, pinned HiPhish and Glench syntax are covered by regression
+  tests. No generic Jinja implementation is vendored. Additional generic
+  providers can change behavior; do not stack competing Jinja plugins.
+* With older Glench providers, HTML host loading is temporarily disabled while
+  sourcing syntax and its previous setting restored, preventing Salt recursion.
+  Only syntax is composed; salt-vim never loads Jinja's HTML-oriented indent
+  or ftplugin. A separately installed provider may have its own global behavior.
+* Requisite/typo groups are key-highlighting hints, not semantic validation.
+  Salt Jinja extensions and injected globals have separate syntax groups.
 
-Too slow?
-=========
+Buffer settings
+===============
 
-Note that the default yaml highlighting that ships with vim is very slow with
-long lines (e.g., ssh keys, or certificates). You might want to switch to a
-faster yaml highlighter, like `vim-yaml <https://github.com/stephpy/vim-yaml>`_.
+Sets ``comments=:#``, ``commentstring=# %s`` and ``autoindent``. Recommended
+style adds ``expandtab``, ``shiftwidth=2`` and ``softtabstop=2``. Disable just
+the style defaults before opening a Salt buffer::
 
-Configuration
-=============
+    let g:salt_recommended_style = 0
 
-By default, the syntax file will search for the existence of a Jinja syntax
-file (as described in the `Jinja docs`_ or via a `Vim bundle`_) in the
-``runtimepath``, and load that if found. If it is not found, the Django
-template syntax file (which is slightly different, but bundled with Vim) will
-be used. You can force using either syntax file using the global variable
-``g:sls_use_jinja_syntax``. If it is set, autodetection will be turned off.
+The standard ``g:filetype_recommended_style`` is the fallback. All changed
+options have ``b:undo_ftplugin`` cleanup. No mappings, forced folding,
+``formatoptions`` changes, regexp-engine changes, UTF-8 error matches, global
+indent functions, or destructive ``clearmatches()`` calls are installed.
+There is deliberately no mixed YAML/Jinja ``indentexpr`` yet.
 
-.. _Jinja docs: http://jinja.pocoo.org/docs/integration/#vim
-.. _Vim bundle: https://github.com/Glench/Vim-Jinja2-Syntax
+Migration from the archived plugin
+=================================
 
-Valid values:
+Remove old manually copied runtime files before installing this continuation;
+two Salt plugins on ``runtimepath`` can both install detection hooks. Existing
+``sls`` configurations still work, but new automatic detection uses ``salt``.
+The old ``g:sls_use_jinja_syntax`` Django/Jinja selector is retired. Existing
+NERDCommenter delimiter dictionaries and user-defined highlights are preserved.
+Unicode is valid YAML; the previous non-ASCII warning has been removed.
 
-``0``
-    Use the Django syntax file.
+Diagnostics belong to an external integration: ALE commonly uses ``salt``;
+nvim-lint/none-ls configurations may need an explicit ``salt``/``sls`` alias.
+Use salt-lint for unrendered SLS, not plain yamllint. Choose one diagnostics
+owner. Resolve tools and decide formatting policies in your editor/project;
+salt-vim does not start any tool, including on save. Salt LSP is a separate
+project and is outside this plugin's implementation scope.
 
-``1``
-    Use the Jinja syntax file, regardless of whether it exists or not.
+Tests and current limits
+========================
 
-Example section of ``~/.vimrc``:
+From the repository root::
 
-.. code-block:: vim
+    vim -Nu NONE -U NONE -i NONE -n -es -S tests/test.vim
+    nvim -Nu NONE -U NONE -i NONE -n -es -S tests/test.vim
 
-    " Force using the Django template syntax file
-    let g:sls_use_jinja_syntax = 0
+``vim`` must actually be Vim, not a Neovim alias. To exercise a different
+Jinja syntax provider, set ``SALT_VIM_JINJA_PATH`` to its checkout. Tests load
+only its syntax, not its detection, indentation or ftplugin. CI tests Neovim
+nightly and stable with the runtime provider and with HiPhish and Glench at
+pinned revisions, plus Neovim 0.11.5 and Vim 9.2 with the runtime provider.
+Fixtures are synthetic and never rendered or executed. Tests cover quoted
+and unquoted expressions, nested structures, templated keys, block scalars,
+normal and whitespace-trimmed raw blocks, whitespace-control tags, Salt
+extensions, detection, option undo, legacy filetypes, and all three regexp
+engines.
 
-Files
-=====
+The runtime, HiPhish and Glench raw regions do not accept whitespace control,
+so ``syntax/salt.vim`` extends the provider's ``jinjaRaw`` group to recognize
+``{%- raw -%}``. This covers editor runtimes that an upstream fix would not
+reach, and remains harmless once a provider handles those delimiters itself.
 
-``syntax/sls.vim``
-    Syntax file for editing YAML + Jinja SLS files.
-
-``ftplugin/sls.vim``
-    Filetype plugin with good default config for SLS files. Configures suitable
-    wrapping, folding and indenting. Added features:
-
-    - All tabs are converted to spaces.
-    - Tab key indents by 2 spaces.
-    - Comments are hardwrapped (with added leading ``#``).
-      This is done by setting ``formatoptions``.
-    - <Space> key will try to fold/unfold an area.
-    - Visually selected block might be indented and unindented
-      by keys ``<`` and ``>``, keeping the visual selection selected.
-    - Improved indenting of YAML expressions with custom indenting function.
-    - Visual warning for non-ASCII characters (which are not allowed in YAML).
-
-``ftdetect/sls.vim``
-    Detect SLS files by the file extension ``.sls``, and ``Saltfile`` files by
-    an exact filename match.
-
-Other VIM plugins you might find interesting
-============================================
-
-- `Powerline <https://github.com/Lokaltog/vim-powerline>`_
-- `NERDTree <https://github.com/scrooloose/nerdtree>`_
-- `Gundo <https://github.com/sjl/gundo.vim/>`_
-- `TabMan <https://github.com/kien/tabman.vim>`_
-- `PythonMode <https://github.com/klen/python-mode>`_
-- `FuzzyFinder <https://github.com/vim-scripts/FuzzyFinder>`_
-- `CtrlP <http://kien.github.com/ctrlp.vim/>`_
+Generic delimiter styling varies by provider, notably ``+`` on older runtime
+Jinja. No automatic indentation or rendered-source mapping is promised. Snippets
+and optional indentation/folds are later milestones, not bundled in this first
+foundation. Syntax synchronizes from the start of the buffer for multiline
+correctness; very large files may be slower.

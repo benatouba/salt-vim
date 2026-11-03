@@ -1,0 +1,25 @@
+salt-vim
+Copyright (c) 2014 SaltStack
+
+Community continuation of https://github.com/vmware-archive/salt-vim
+Base revision: 6ca9e3500cc39dd417b411435d58a1b720b331cc
+The original Apache-2.0 license notice and Git history are retained.
+The original Salt syntax credits Seth House.
+
+The expanded Salt state argument and typo keyword lists are adapted from
+Erik Johnson (terminalmage), commit d44e57ab3c39706cbffecc91d22a3ce5f085707c:
+https://github.com/terminalmage/salt-vim/commit/d44e57ab3c39706cbffecc91d22a3ce5f085707c
+Reviewed against https://docs.saltproject.io/en/latest/ref/states/requisites.html
+on 2026-11-04. These are syntax hints, not a version-aware validator.
+
+The continuation changes the detected filetype to salt (retaining sls aliases),
+replaces intrusive ftplugin behavior with undoable buffer-local defaults,
+composes external YAML/Jinja syntax, and adds Salt-specific highlighting,
+synthetic tests, CI and documentation. Modified runtime files are marked.
+
+Generic YAML/Jinja syntax is loaded from the user's runtime, not redistributed
+here. No Glench, HiPhish or GPL-marked donor ftplugin/indent code is bundled.
+Those projects retain their own copyright and licenses.
+
+This is an independent community continuation, not an endorsed official
+ownership transfer. Contributor names identify provenance, not endorsement.
