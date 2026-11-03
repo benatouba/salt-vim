@@ -36,7 +36,10 @@ endtry
 " Template blocks can span YAML scalars; providers differ in sync defaults.
 syntax sync fromstart
 
+" Runtime, HiPhish and Glench raw regions reject whitespace control, so trimmed
+" blocks fall through to tag and variable highlighting. Extending the provider's
 " own group keeps its exclusions working and stays correct if it is fixed later.
+syn region jinjaRaw matchgroup=jinjaRawDelim start="{%[-+]\?\s*raw\s*[-+]\?%}" end="{%[-+]\?\s*endraw\s*[-+]\?%}" containedin=ALLBUT,jinjaTagBlock,jinjaVarBlock,jinjaString,jinjaComment
 
 " Salt's renderer extensions and injected globals are not generic Jinja.
 syn keyword salt_jinjaStatement load_yaml endload import_yaml load_json import_json load_text import_text contained containedin=jinjaTagBlock
