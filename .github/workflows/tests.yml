@@ -1,0 +1,43 @@
+name: Editor regression tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Current Neovim is the primary target and covers every Jinja provider.
+        editor: [neovim]
+        version: [nightly, stable]
+        jinja: [runtime, hiphish, glench]
+        # Portability checks: the oldest supported Neovim and a Vim whose
+        # runtime ships syntax/jinja.vim (Ubuntu's package can predate it).
+        include:
+          - { editor: neovim, version: v0.11.5, jinja: runtime }
+          - { editor: vim, version: v9.2.1164, jinja: runtime }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        if: matrix.jinja == 'hiphish'
+        with:
+          repository: HiPhish/jinja.vim
+          ref: d3ab7a8f9d084aa30e93e8d891c872ab32cdbb34
+          path: .test-jinja
+      - uses: actions/checkout@v4
+        if: matrix.jinja == 'glench'
+        with:
+          repository: Glench/Vim-Jinja2-Syntax
+          ref: 2c17843b074b06a835f88587e1023ceff7e2c7d1
+          path: .test-jinja
+      - name: Select external syntax provider
+        if: matrix.jinja != 'runtime'
+        run: echo "SALT_VIM_JINJA_PATH=$GITHUB_WORKSPACE/.test-jinja" >> "$GITHUB_ENV"
+      - id: editor
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: ${{ matrix.editor == 'neovim' }}
+          version: ${{ matrix.version }}
+      - name: Run tests
+        run: ${{ steps.editor.outputs.executable }} -Nu NONE -U NONE -i NONE -n -es -S tests/test.vim
