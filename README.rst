@@ -9,7 +9,7 @@ This is a community continuation of `SaltStack's original salt-vim
 transfer or a VMware/Broadcom/Salt Project endorsement. Original history and
 Apache-2.0 notices are preserved. See ``NOTICE`` for reviewed donor attribution.
 
-Status: 0.1.0, the first community release. This plugin does not render
+Status: 0.2.0, adding snippets and a large-file sync opt-out. This plugin does not render
 templates, execute Salt, install tools, format files, start language servers,
 or discover project commands.
 
@@ -145,9 +145,9 @@ so ``syntax/salt.vim`` extends the provider's ``jinjaRaw`` group to recognize
 reach, and remains harmless once a provider handles those delimiters itself.
 
 Generic delimiter styling varies by provider, notably ``+`` on older runtime
-Jinja. No automatic indentation or rendered-source mapping is promised. Snippets
-and optional indentation/folds are later milestones, not bundled in this first
-foundation. Syntax synchronizes from the start of the buffer for multiline
+Jinja. No automatic indentation or rendered-source mapping is promised.
+Optional indentation/folds are a later milestone and are not bundled.
+Syntax synchronizes from the start of the buffer for multiline
 correctness. On a synthetic 45,000-line state this took about 4.8 s for the
 first jump to the end of the buffer, against about 0.1 s with a bounded sync.
 Large-file users can trade some multiline accuracy for speed::
