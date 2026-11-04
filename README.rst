@@ -9,7 +9,7 @@ This is a community continuation of `SaltStack's original salt-vim
 transfer or a VMware/Broadcom/Salt Project endorsement. Original history and
 Apache-2.0 notices are preserved. See ``NOTICE`` for reviewed donor attribution.
 
-Status: 0.1.0, the first community release. This plugin does not render
+Status: 0.2.0, adding snippets and a large-file sync opt-out. This plugin does not render
 templates, execute Salt, install tools, format files, start language servers,
 or discover project commands.
 
@@ -78,6 +78,20 @@ options have ``b:undo_ftplugin`` cleanup. No mappings, forced folding,
 indent functions, or destructive ``clearmatches()`` calls are installed.
 There is deliberately no mixed YAML/Jinja ``indentexpr`` yet.
 
+Snippets
+========
+
+``package.json`` and ``snippets/salt.json`` provide a small set of original
+VS Code-style snippets (``spkg``, ``sfile``, ``ssvc``, ``sinc``, ``sreq``,
+``swatch``, ``sonch``, ``smap``, ``spillar``, ``sgrain``) for both ``salt`` and
+``sls``. salt-vim does not load them itself; they are inert data for your
+snippet engine. With LuaSnip::
+
+    require("luasnip.loaders.from_vscode").lazy_load()
+
+This discovers the manifest on ``runtimepath``. To opt out, use the loader's
+``exclude`` option or simply do not call a loader; nothing else is affected.
+
 Release policy
 ==============
 
@@ -131,7 +145,13 @@ so ``syntax/salt.vim`` extends the provider's ``jinjaRaw`` group to recognize
 reach, and remains harmless once a provider handles those delimiters itself.
 
 Generic delimiter styling varies by provider, notably ``+`` on older runtime
-Jinja. No automatic indentation or rendered-source mapping is promised. Snippets
-and optional indentation/folds are later milestones, not bundled in this first
-foundation. Syntax synchronizes from the start of the buffer for multiline
-correctness; very large files may be slower.
+Jinja. No automatic indentation or rendered-source mapping is promised.
+Optional indentation/folds are a later milestone and are not bundled.
+Syntax synchronizes from the start of the buffer for multiline
+correctness. On a synthetic 45,000-line state this took about 4.8 s for the
+first jump to the end of the buffer, against about 0.1 s with a bounded sync.
+Large-file users can trade some multiline accuracy for speed::
+
+    let g:salt_syntax_sync_fromstart = 0
+
+This switches to ``syntax sync minlines=200``.

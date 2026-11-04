@@ -1,0 +1,11 @@
+{
+  "name": "salt-vim",
+  "description": "Salt state snippets for salt-vim",
+  "license": "Apache-2.0",
+  "engines": { "vscode": "^1.0.0" },
+  "contributes": {
+    "snippets": [
+      { "language": ["salt", "sls"], "path": "./snippets/salt.json" }
+    ]
+  }
+}

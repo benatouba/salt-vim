@@ -110,6 +110,15 @@ function! s:Run() abort
   unlet! g:main_syntax
 
   enew!
+  setfiletype salt
+  call assert_match('starts at the first line', execute('syntax sync'))
+  enew!
+  let g:salt_syntax_sync_fromstart = 0
+  setfiletype salt
+  call assert_match('200 lines before top line', execute('syntax sync'))
+  unlet g:salt_syntax_sync_fromstart
+
+  enew!
   let g:salt_recommended_style = 0
   setlocal shiftwidth=4 softtabstop=4 noexpandtab
   setfiletype salt
@@ -151,6 +160,20 @@ function! s:Run() abort
     enew!
     call delete(directory, 'rf')
   endtry
+
+  " Snippets are inert VS Code JSON data for the user's snippet engine.
+  let manifest = json_decode(join(readfile(s:root . '/package.json'), "\n"))
+  let entries = manifest.contributes.snippets
+  call assert_equal(1, len(entries))
+  call assert_equal(['salt', 'sls'], entries[0].language)
+  let snippets = json_decode(join(readfile(s:root . '/' . entries[0].path), "\n"))
+  let prefixes = []
+  for [name, snippet] in items(snippets)
+    call assert_true(type(snippet.prefix) == v:t_string && snippet.prefix =~# '^s\w\+$', name)
+    call assert_true(type(snippet.body) == v:t_list && !empty(snippet.body), name)
+    call add(prefixes, snippet.prefix)
+  endfor
+  call assert_equal(len(prefixes), len(uniq(sort(copy(prefixes)))), 'Unique snippet prefixes')
 
   " Forks reported regexp engine failures; force syntax evaluation in each
   " supported engine without the plugin ever selecting one for the user.
