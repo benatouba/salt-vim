@@ -12,6 +12,9 @@ https://github.com/terminalmage/salt-vim/commit/d44e57ab3c39706cbffecc91d22a3ce5
 Reviewed against https://docs.saltproject.io/en/latest/ref/states/requisites.html
 on 2026-11-04. These are syntax hints, not a version-aware validator.
 
+The snippets in snippets/salt.json are original to this continuation
+(Apache-2.0); no third-party snippet content is included.
+
 The continuation changes the detected filetype to salt (retaining sls aliases),
 replaces intrusive ftplugin behavior with undoable buffer-local defaults,
 composes external YAML/Jinja syntax, and adds Salt-specific highlighting,

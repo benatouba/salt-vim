@@ -152,6 +152,20 @@ function! s:Run() abort
     call delete(directory, 'rf')
   endtry
 
+  " Snippets are inert VS Code JSON data for the user's snippet engine.
+  let manifest = json_decode(join(readfile(s:root . '/package.json'), "\n"))
+  let entries = manifest.contributes.snippets
+  call assert_equal(1, len(entries))
+  call assert_equal(['salt', 'sls'], entries[0].language)
+  let snippets = json_decode(join(readfile(s:root . '/' . entries[0].path), "\n"))
+  let prefixes = []
+  for [name, snippet] in items(snippets)
+    call assert_true(type(snippet.prefix) == v:t_string && snippet.prefix =~# '^s\w\+$', name)
+    call assert_true(type(snippet.body) == v:t_list && !empty(snippet.body), name)
+    call add(prefixes, snippet.prefix)
+  endfor
+  call assert_equal(len(prefixes), len(uniq(sort(copy(prefixes)))), 'Unique snippet prefixes')
+
   " Forks reported regexp engine failures; force syntax evaluation in each
   " supported engine without the plugin ever selecting one for the user.
   for engine in [0, 1, 2]

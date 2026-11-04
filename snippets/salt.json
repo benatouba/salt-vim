@@ -1,0 +1,59 @@
+{
+  "State: pkg.installed": {
+    "prefix": "spkg",
+    "description": "Install a package",
+    "body": ["${1:install_${2:name}}:", "  pkg.installed:", "    - name: ${2:name}$0"]
+  },
+  "State: file.managed": {
+    "prefix": "sfile",
+    "description": "Manage a file from a source",
+    "body": [
+      "${1:/path/to/file}:",
+      "  file.managed:",
+      "    - source: salt://${2:path/to/source}",
+      "    - user: ${3:root}",
+      "    - group: ${4:root}",
+      "    - mode: '${5:0644}'$0"
+    ]
+  },
+  "State: service.running": {
+    "prefix": "ssvc",
+    "description": "Keep a service running and enabled",
+    "body": ["${1:name}:", "  service.running:", "    - enable: True$0"]
+  },
+  "Include": {
+    "prefix": "sinc",
+    "description": "Include other SLS files",
+    "body": ["include:", "  - ${1:formula}$0"]
+  },
+  "Requisite: require": {
+    "prefix": "sreq",
+    "description": "Require another state",
+    "body": ["- require:", "  - ${1:pkg}: ${2:id}$0"]
+  },
+  "Requisite: watch": {
+    "prefix": "swatch",
+    "description": "Watch another state",
+    "body": ["- watch:", "  - ${1:file}: ${2:id}$0"]
+  },
+  "Requisite: onchanges": {
+    "prefix": "sonch",
+    "description": "Run only when another state changed",
+    "body": ["- onchanges:", "  - ${1:file}: ${2:id}$0"]
+  },
+  "Jinja: import map": {
+    "prefix": "smap",
+    "description": "Import a map.jinja file",
+    "body": ["{% from \"${1:formula}/map.jinja\" import ${2:formula} with context %}$0"]
+  },
+  "Jinja: pillar.get": {
+    "prefix": "spillar",
+    "description": "Look up a pillar value with a default",
+    "body": ["{{ salt['pillar.get']('${1:key}', ${2:default}) }}$0"]
+  },
+  "Jinja: grains.get": {
+    "prefix": "sgrain",
+    "description": "Look up a grain with a default",
+    "body": ["{{ salt['grains.get']('${1:key}', ${2:default}) }}$0"]
+  }
+}

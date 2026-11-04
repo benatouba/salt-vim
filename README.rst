@@ -78,6 +78,20 @@ options have ``b:undo_ftplugin`` cleanup. No mappings, forced folding,
 indent functions, or destructive ``clearmatches()`` calls are installed.
 There is deliberately no mixed YAML/Jinja ``indentexpr`` yet.
 
+Snippets
+========
+
+``package.json`` and ``snippets/salt.json`` provide a small set of original
+VS Code-style snippets (``spkg``, ``sfile``, ``ssvc``, ``sinc``, ``sreq``,
+``swatch``, ``sonch``, ``smap``, ``spillar``, ``sgrain``) for both ``salt`` and
+``sls``. salt-vim does not load them itself; they are inert data for your
+snippet engine. With LuaSnip::
+
+    require("luasnip.loaders.from_vscode").lazy_load()
+
+This discovers the manifest on ``runtimepath``. To opt out, use the loader's
+``exclude`` option or simply do not call a loader; nothing else is affected.
+
 Release policy
 ==============
 
