@@ -34,7 +34,11 @@ finally
 endtry
 
 " Template blocks can span YAML scalars; providers differ in sync defaults.
-syntax sync fromstart
+if get(g:, 'salt_syntax_sync_fromstart', 1)
+  syntax sync fromstart
+else
+  syntax sync minlines=200
+endif
 
 " Runtime, HiPhish and Glench raw regions reject whitespace control, so trimmed
 " blocks fall through to tag and variable highlighting. Extending the provider's

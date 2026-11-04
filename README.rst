@@ -148,4 +148,10 @@ Generic delimiter styling varies by provider, notably ``+`` on older runtime
 Jinja. No automatic indentation or rendered-source mapping is promised. Snippets
 and optional indentation/folds are later milestones, not bundled in this first
 foundation. Syntax synchronizes from the start of the buffer for multiline
-correctness; very large files may be slower.
+correctness. On a synthetic 45,000-line state this took about 4.8 s for the
+first jump to the end of the buffer, against about 0.1 s with a bounded sync.
+Large-file users can trade some multiline accuracy for speed::
+
+    let g:salt_syntax_sync_fromstart = 0
+
+This switches to ``syntax sync minlines=200``.

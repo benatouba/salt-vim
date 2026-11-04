@@ -110,6 +110,15 @@ function! s:Run() abort
   unlet! g:main_syntax
 
   enew!
+  setfiletype salt
+  call assert_match('starts at the first line', execute('syntax sync'))
+  enew!
+  let g:salt_syntax_sync_fromstart = 0
+  setfiletype salt
+  call assert_match('200 lines before top line', execute('syntax sync'))
+  unlet g:salt_syntax_sync_fromstart
+
+  enew!
   let g:salt_recommended_style = 0
   setlocal shiftwidth=4 softtabstop=4 noexpandtab
   setfiletype salt
