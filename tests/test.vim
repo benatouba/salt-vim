@@ -27,6 +27,98 @@ function! s:NotSalt(lnum, text) abort
   call assert_equal([], filter(s:Groups(a:lnum, a:text), 'v:val =~# "^salt_"'))
 endfunction
 
+function! s:Layout() abort
+  let source = readfile(s:root . '/tests/fixtures/layout.sls')
+  let expected = readfile(s:root . '/tests/fixtures/layout.expected.sls')
+  enew!
+  setfiletype salt
+  call setline(1, source)
+  normal! gg=G
+  call assert_notequal(expected, getline(1, '$'), 'Fixture demonstrates a gain over plain autoindent')
+  call setline(1, source)
+  setlocal foldmethod=indent
+  normal! zx
+  call assert_equal(0, foldlevel(1), 'Indent folds miss top-level Jinja blocks')
+  setlocal foldmethod<
+  for ft in ['salt', 'sls']
+    enew!
+    let g:salt_indent = 1
+    let g:salt_folds = 0
+    execute 'setfiletype ' . ft
+    call assert_equal('salt#layout#Indent()', &l:indentexpr)
+    call assert_equal(&g:foldmethod, &l:foldmethod, 'Folding independently disabled')
+    call setline(1, source)
+    normal! gg=G
+    call assert_equal(expected, getline(1, '$'), 'Mixed indentation: ' . ft)
+    unlet! b:salt_indent_lines b:salt_indent_plan
+    normal! gg=G
+    call assert_equal(expected, getline(1, '$'), 'Indentation is idempotent')
+    call setline(1, ['{# multiline comment', '{% if ignored %}', '#}',
+          \ 'key: >2-', '  {% if literal %}', '  more text',
+          \ 'next: "{% if quoted %}"', '{% if inline %}value{% endif %}', 'after: true'])
+    10,$delete _
+    let literal = getline(1, '$')
+    normal! gg=G
+    call assert_equal(literal, getline(1, '$'), 'Comments, scalars and inline tags stay opaque')
+    call setline(1, ['{% load_json as data %}', '{"key": true}', '{% endload %}',
+          \ '{% load_text as text %}', 'value', '{% endload %}',
+          \ '{% if condition %}', '{% endif %}'])
+    normal! gg=G
+    call assert_equal('{"key": true}', getline(2))
+    call assert_equal('value', getline(5), 'load_text must retain literal whitespace')
+    call assert_equal('{% endif %}', getline(8))
+    call setline(1, ['{% if outer %}', '{% if inner -%}', 'value: true',
+          \ '  {% endif -%}', '{% endif %}', '{% raw %}', 'text', '  {% endraw %}'])
+    let whitespace = getline(1, '$')
+    normal! gg=G
+    call assert_equal(whitespace, getline(1, '$'), 'Rendered prefixes and raw closing whitespace are data')
+    setlocal filetype=text
+    call assert_equal(&g:indentexpr, &l:indentexpr)
+    call assert_equal(&g:indentkeys, &l:indentkeys)
+    call assert_false(exists('b:salt_indent_plan'))
+
+    enew!
+    let g:salt_indent = 0
+    let g:salt_folds = 1
+    execute 'setfiletype ' . ft
+    call assert_equal(&g:indentexpr, &l:indentexpr, 'Indentation independently disabled')
+    call assert_equal('expr', &l:foldmethod)
+    call setline(1, source)
+    normal! zx
+    call assert_equal(1, foldlevel(1), 'Top-level Jinja folds unlike indent folds')
+    call assert_equal(2, foldlevel(4), 'Nested Jinja fold')
+    call assert_equal(2, foldlevel(14), 'Closing tag belongs to fold')
+    call assert_equal(1, foldlevel(18))
+    call assert_equal(1, foldlevel(19), 'load_yaml fold')
+    call assert_equal(1, foldlevel(26), 'Raw contents do not open folds')
+    call assert_equal(0, foldlevel(28), 'Fold ends at endraw')
+    call setline(1, 'plain:')
+    normal! zx
+    call assert_equal(0, foldlevel(1), 'Fold cache invalidated after editing')
+    setlocal filetype=text
+    call assert_equal(&g:foldmethod, &l:foldmethod)
+    call assert_equal(&g:foldexpr, &l:foldexpr)
+    call assert_false(exists('b:salt_layout'))
+  endfor
+  enew!
+  let g:salt_indent = 1
+  let g:salt_folds = 1
+  setfiletype salt
+  setlocal shiftwidth=4
+  call setline(1, ['{% if condition %}', '{% if nested %}', 'key:', '  nested: true', '{% endif %}', '{% endif %}'])
+  normal! gg=G
+  call assert_equal(['{% if condition %}', '    {% if nested %}', 'key:', '  nested: true', '    {% endif %}', '{% endif %}'], getline(1, '$'))
+  %delete _
+  call setline(1, 'key:')
+  execute "normal! Gochild: true\<Esc>"
+  call assert_equal('    child: true', getline(2), 'New mapping entry')
+  setlocal filetype=text
+  call assert_equal(&g:indentexpr, &l:indentexpr)
+  call assert_equal(&g:foldmethod, &l:foldmethod)
+  unlet g:salt_indent g:salt_folds
+  enew!
+endfunction
+
 function! s:Run() abort
   let delimiters = {'existing': {'left': '!'}}
   let g:NERDCustomDelimiters = deepcopy(delimiters)
@@ -46,6 +138,7 @@ function! s:Run() abort
   call assert_equal(old_fo, &l:formatoptions)
   call assert_equal(old_fold, &l:foldmethod)
   call assert_equal(old_indent, &l:indentexpr)
+  call assert_equal(&g:foldexpr, &l:foldexpr)
   call assert_equal(delimiters, g:NERDCustomDelimiters)
   call assert_equal(1, g:jinja_syntax_html)
   call assert_false(exists('g:main_syntax'))
@@ -174,6 +267,9 @@ function! s:Run() abort
     call add(prefixes, snippet.prefix)
   endfor
   call assert_equal(len(prefixes), len(uniq(sort(copy(prefixes)))), 'Unique snippet prefixes')
+  call assert_equal(10, len(snippets), 'Curated snippet set')
+  call assert_equal(sort(['spkg', 'sfile', 'ssvc', 'sinc', 'sreq', 'swatch', 'sonch', 'smap', 'spillar', 'sgrain']), sort(prefixes))
+  call s:Layout()
 
   " Forks reported regexp engine failures; force syntax evaluation in each
   " supported engine without the plugin ever selecting one for the user.

@@ -12,5 +12,13 @@ if get(g:, 'salt_recommended_style', get(g:, 'filetype_recommended_style', 1))
   let b:undo_ftplugin .= ' expandtab< shiftwidth< softtabstop<'
 endif
 
-" No indentexpr, folding, mappings, match IDs, global options or autocmds.
-" YAML-only indentation is not a reliable mixed YAML/Jinja indenter.
+if get(g:, 'salt_indent', 0)
+  setlocal indentexpr=salt#layout#Indent()
+  setlocal indentkeys=o,O,0{,},!^F
+  let b:undo_ftplugin .= ' | setlocal indentexpr< indentkeys< | unlet! b:salt_indent_lines b:salt_indent_plan b:salt_indent_key'
+endif
+
+if get(g:, 'salt_folds', 0)
+  setlocal foldmethod=expr foldexpr=salt#layout#Fold(v:lnum)
+  let b:undo_ftplugin .= ' | setlocal foldmethod< foldexpr< | unlet! b:salt_layout b:salt_layout_key'
+endif

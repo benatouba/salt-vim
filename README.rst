@@ -13,6 +13,9 @@ Status: 0.2.0, adding snippets and a large-file sync opt-out. This plugin does n
 templates, execute Salt, install tools, format files, start language servers,
 or discover project commands.
 
+Unreleased: independent opt-in conservative indentation and mixed YAML/Jinja
+folds, with regression fixtures for all three syntax providers.
+
 Requirements and installation
 =============================
 
@@ -76,7 +79,41 @@ The standard ``g:filetype_recommended_style`` is the fallback. All changed
 options have ``b:undo_ftplugin`` cleanup. No mappings, forced folding,
 ``formatoptions`` changes, regexp-engine changes, UTF-8 error matches, global
 indent functions, or destructive ``clearmatches()`` calls are installed.
-There is deliberately no mixed YAML/Jinja ``indentexpr`` yet.
+
+Optional indentation and folds
+==============================
+
+Both features are off by default. Set either option before opening a buffer::
+
+    let g:salt_indent = 1
+    let g:salt_folds = 1
+
+Indentation installs an autoloaded ``indentexpr`` for standalone Jinja blocks,
+including nested controls, ``else``/``elif``, trimmed tags and Salt's
+``load_yaml``/``load_json``/``load_text`` blocks. It aligns standalone template
+controls with their nesting and matches closing tags to openers. It retains
+existing YAML indentation exactly: adding YAML indentation for a Jinja loop
+would change the rendered mapping hierarchy. It does not reconstruct YAML from
+flattened or incorrectly indented input: sibling boundaries are ambiguous.
+Block scalar content, raw/``load_text`` bodies and Jinja comments are left
+alone. Trailing-only whitespace-control tags and raw/text closing prefixes
+retain their indentation because those spaces can become rendered data.
+Inline and multiline template statements are not reflowed. Review
+reindentation changes as with any indentation tool; this is not a YAML/Jinja
+parser or a formatter. New blank lines inherit the preceding YAML indentation,
+increasing it after mapping headers, without adding template depth to YAML.
+
+Folding installs ``foldmethod=expr`` and an autoloaded ``foldexpr``. It combines
+YAML indentation depth with standalone Jinja blocks, including top-level
+template blocks missed by plain indentation folds. Raw bodies and block scalars
+do not introduce template folds. It leaves ``foldlevel``, ``foldenable`` and
+other opening preferences alone. Both features support ``salt`` and ``sls``;
+all installed options and cached state are cleaned up on filetype changes.
+Neither feature loads a provider's indentation code or any donor fold code.
+
+The indentation expression scans a structural snapshot; folding caches its
+scan until the buffer or indentation width changes. These features are opt-in
+and are not intended as a large-file performance optimization.
 
 Snippets
 ========
@@ -91,6 +128,7 @@ snippet engine. With LuaSnip::
 
 This discovers the manifest on ``runtimepath``. To opt out, use the loader's
 ``exclude`` option or simply do not call a loader; nothing else is affected.
+See ``snippets/README.md`` for origins and current Salt reference checks.
 
 Release policy
 ==============
@@ -145,8 +183,9 @@ so ``syntax/salt.vim`` extends the provider's ``jinjaRaw`` group to recognize
 reach, and remains harmless once a provider handles those delimiters itself.
 
 Generic delimiter styling varies by provider, notably ``+`` on older runtime
-Jinja. No automatic indentation or rendered-source mapping is promised.
-Optional indentation/folds are a later milestone and are not bundled.
+Jinja. No rendered-source mapping or general-purpose YAML repair is promised.
+Optional indentation/folds are covered by reindentation, idempotence, fold
+level, default-off, independent opt-in and filetype-undo regression tests.
 Syntax synchronizes from the start of the buffer for multiline
 correctness. On a synthetic 45,000-line state this took about 4.8 s for the
 first jump to the end of the buffer, against about 0.1 s with a bounded sync.

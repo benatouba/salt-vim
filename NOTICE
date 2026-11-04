@@ -14,6 +14,8 @@ on 2026-11-04. These are syntax hints, not a version-aware validator.
 
 The snippets in snippets/salt.json are original to this continuation
 (Apache-2.0); no third-party snippet content is included.
+The optional layout implementation in autoload/salt/layout.vim is also
+original Apache-2.0 code; no donor indentation or fold implementation is used.
 
 The continuation changes the detected filetype to salt (retaining sls aliases),
 replaces intrusive ftplugin behavior with undoable buffer-local defaults,
