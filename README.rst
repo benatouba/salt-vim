@@ -9,9 +9,9 @@ This is a community continuation of `SaltStack's original salt-vim
 transfer or a VMware/Broadcom/Salt Project endorsement. Original history and
 Apache-2.0 notices are preserved. See ``NOTICE`` for reviewed donor attribution.
 
-Status: first-release foundation, not a published release. This plugin does
-not render templates, execute Salt, install tools, format files, start language
-servers, or discover project commands.
+Status: 0.1.0, the first community release. This plugin does not render
+templates, execute Salt, install tools, format files, start language servers,
+or discover project commands.
 
 Requirements and installation
 =============================
@@ -77,6 +77,17 @@ options have ``b:undo_ftplugin`` cleanup. No mappings, forced folding,
 ``formatoptions`` changes, regexp-engine changes, UTF-8 error matches, global
 indent functions, or destructive ``clearmatches()`` calls are installed.
 There is deliberately no mixed YAML/Jinja ``indentexpr`` yet.
+
+Release policy
+==============
+
+Releases use annotated semantic-version tags. Before 1.0, a minor release may
+change behavior; a patch release fixes defects without intentional behavior
+changes. From 1.0, removing the ``sls`` filetype alias or raising the minimum
+editor version is a breaking change. The supported baseline is Neovim 0.11 or
+newer, or a Vim whose runtime provides ``syntax/jinja.vim`` (Vim 9.1.0735 or
+newer). Install a tagged release when you want a stable snapshot instead of
+tracking ``master``.
 
 Migration from the archived plugin
 =================================
